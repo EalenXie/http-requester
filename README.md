@@ -1,7 +1,7 @@
 Http Requester
 ==================
 
-#### 获取 调用第三方接口请求信息的工具包
+#### 获取调用第三方接口请求信息的工具包
 
 不改变原有的实现方式,通过对应的代理类来实现对请求信息进行获取。
 
@@ -9,14 +9,14 @@ Http Requester
 
 主要支持的`Proxy`类: 
 
-- HttpClientProxy: 支持获取apache HttpClient 请求信息的代理类
-- OkHttpClientProxy: 支持获取 okhttp 请求信息的代理类
-- RestTemplateProxy: 支持获取RestTemplate请求信息的代理类
+- HttpClientProxy: 支持获取apache `HttpClient` 请求信息的代理类
+- OkHttpClientProxy: 支持获取 `OkHttpClient` 请求信息的代理类
+- RestTemplateProxy: 支持获取 `RestTemplate` 请求信息的代理类
 
 
 主要使用方式 : 
 
-1. 实现 请求信息收集的接口 `ReqInfoCollector`,对收集到的请求数据自行处理(产生日志,或写入文件,或写入数据库).提示: 收集逻辑最好异步处理 
+1. 实现 请求信息收集的接口 `ReqInfoCollector` , 对收集到的请求数据自行处理(产生日志,或写入文件,或写入数据库). 提示: 收集逻辑最好异步处理 
 
 2. 初始化Proxy对象,对应Proxy传入对应的原对象进行初始化
 
