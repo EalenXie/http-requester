@@ -1,7 +1,5 @@
 package com.github.http;
 
-import com.github.http.OkHttpClientProxy;
-import com.github.http.ReqInfoCollector;
 import okhttp3.*;
 
 import java.io.IOException;

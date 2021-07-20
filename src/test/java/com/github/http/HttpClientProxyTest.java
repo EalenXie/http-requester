@@ -1,8 +1,6 @@
 package com.github.http;
 
 
-import com.github.http.HttpClientProxy;
-import com.github.http.ReqInfoCollector;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;

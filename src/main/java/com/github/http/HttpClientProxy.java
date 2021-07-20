@@ -204,6 +204,7 @@ public class HttpClientProxy {
                 charset = StandardCharsets.UTF_8;
             }
         } catch (Exception e) {
+            this.log.warn("Content Encoding Error", e);
             charset = StandardCharsets.UTF_8;
         }
         String result = new String(bytes, charset);
