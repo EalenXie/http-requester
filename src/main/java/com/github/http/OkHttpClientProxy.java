@@ -47,7 +47,7 @@ public class OkHttpClientProxy {
         Object req = null;
         Object resp = null;
         String desc = null;
-        long responseTimestamp = 0;
+        long costTime = -1L;
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         try {
             req = getRequest(request.body());
@@ -58,7 +58,7 @@ public class OkHttpClientProxy {
                 success = true;
             }
             timestamp = response.sentRequestAtMillis();
-            responseTimestamp = response.receivedResponseAtMillis();
+            costTime = response.receivedResponseAtMillis() - timestamp;
             desc = String.format("%s Call.Execute Success !", className);
         } catch (Exception e) {
             desc = String.format("%s Call.Execute Fail. %s", className, e.getMessage());
@@ -69,11 +69,7 @@ public class OkHttpClientProxy {
             info.setTimestamp(timestamp);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
-            if (responseTimestamp != 0) {
-                info.setCostTime(responseTimestamp - timestamp);
-            } else {
-                info.setCostTime(System.currentTimeMillis() - timestamp);
-            }
+            info.setCostTime(costTime == -1L ? System.currentTimeMillis() - timestamp : costTime);
             info.setSuccess(success);
             info.setUrlParam(request.url().query());
             info.setDesc(desc);

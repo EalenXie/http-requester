@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * Created by EalenXie on 2021/7/14 15:39
@@ -82,7 +83,6 @@ public class HttpClientProxy {
         return target;
     }
 
-
     private HttpResponse execute(HttpHost host, HttpRequest request, HttpContext context, ReqInfoCollector collector) throws IOException {
         HttpResponse response;
         long timestamp = System.currentTimeMillis();
@@ -90,12 +90,14 @@ public class HttpClientProxy {
         Object req = null;
         Object resp = null;
         String desc = null;
+        long costTime = -2L;
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         try {
+            response = httpClient.execute(host, request, context);
+            costTime = System.currentTimeMillis() - timestamp;
             if (request instanceof HttpEntityEnclosingRequestBase) {
                 req = EntityUtils.toString(((HttpEntityEnclosingRequestBase) request).getEntity());
             }
-            response = httpClient.execute(host, request, context);
             success = true;
             if (response != null) {
                 rawStatusCode = response.getStatusLine().getStatusCode();
@@ -111,17 +113,17 @@ public class HttpClientProxy {
             throw e;
         } finally {
             ReqInfo info = new ReqInfo();
+            info.setCostTime(costTime == -2L ? (System.currentTimeMillis() - timestamp) : costTime);
             info.setAppName(getAppName());
             info.setHost(host.getHostName());
             info.setPort(host.getPort());
             info.setUrl(request.getRequestLine().getUri());
-            info.setHttpHeaders(request.getAllHeaders());
+            info.setHttpHeaders(request.getAllHeaders() != null ? Arrays.toString(request.getAllHeaders()) : null);
             info.setMethod(request.getRequestLine().getMethod());
             info.setReq(req);
             info.setTimestamp(timestamp);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
-            info.setCostTime(System.currentTimeMillis() - timestamp);
             info.setSuccess(success);
             info.setDesc(desc);
             if (request instanceof HttpUriRequest) {
@@ -174,27 +176,29 @@ public class HttpClientProxy {
     private String getStringByHttpResponse(HttpResponse response) {
         HttpEntity sourceEntity = response.getEntity();
         if (sourceEntity == null) return null;
-        InputStream content;
-        try {
-            content = sourceEntity.getContent();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
         final ByteArrayBuffer buffer = new ByteArrayBuffer(4096);
-        final byte[] tmp = new byte[4096];
-        int l;
-        try {
+        byte[] bytes;
+        try (InputStream content = sourceEntity.getContent()) {
+            final byte[] tmp = new byte[4096];
+            int l;
             while ((l = content.read(tmp)) != -1) {
                 buffer.append(tmp, 0, l);
             }
         } catch (IOException e) {
+            e.printStackTrace();
             return null;
+        } finally {
+            bytes = buffer.toByteArray();
+            BasicHttpEntity basicHttpEntity = new BasicHttpEntity();
+            basicHttpEntity.setChunked(sourceEntity.isChunked());
+            basicHttpEntity.setContentEncoding(sourceEntity.getContentEncoding());
+            basicHttpEntity.setContentType(sourceEntity.getContentType());
+            basicHttpEntity.setContentLength(bytes.length);
+            basicHttpEntity.setContent(new ByteArrayInputStream(bytes));
+            response.setEntity(basicHttpEntity);
+            buffer.clear();
+            EntityUtils.consumeQuietly(sourceEntity);
         }
-        byte[] bytes = buffer.toByteArray();
-        BasicHttpEntity basicHttpEntity = new BasicHttpEntity();
-        basicHttpEntity.setContent(new ByteArrayInputStream(bytes));
-        response.setEntity(basicHttpEntity);
         Header contentEncoding = sourceEntity.getContentEncoding();
         Charset charset;
         try {
@@ -208,7 +212,6 @@ public class HttpClientProxy {
             charset = StandardCharsets.UTF_8;
         }
         String result = new String(bytes, charset);
-        buffer.clear();
         EntityUtils.consumeQuietly(sourceEntity);
         return result;
     }
