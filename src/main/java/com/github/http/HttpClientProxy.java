@@ -35,7 +35,7 @@ public class HttpClientProxy {
 
     private final HttpClient httpClient;
 
-    private final String className = this.getClass().getName();
+    private final String className = getClass().getName();
 
     private String appName;
 
@@ -162,7 +162,7 @@ public class HttpClientProxy {
             } catch (final Exception t2) {
                 // Log this exception. The original exception is more
                 // important and will be thrown to the caller.
-                this.log.warn("Error consuming content after an exception.", t2);
+                log.warn("Error consuming content after an exception.", t2);
             }
             throw t;
         } finally {
@@ -208,7 +208,7 @@ public class HttpClientProxy {
                 charset = StandardCharsets.UTF_8;
             }
         } catch (Exception e) {
-            this.log.warn("Content Encoding Error", e);
+            log.warn("Content Encoding Error", e);
             charset = StandardCharsets.UTF_8;
         }
         String result = new String(bytes, charset);

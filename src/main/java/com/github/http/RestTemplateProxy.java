@@ -129,8 +129,9 @@ public class RestTemplateProxy {
         Object resp = null;
         String desc = null;
         Object httpHeaders = null;
-        long timestamp = System.currentTimeMillis();
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        long timestamp = System.currentTimeMillis();
+        int costTime = -3;
         try {
             // 请求参数解析
             if (requestEntity != null) {
@@ -138,6 +139,7 @@ public class RestTemplateProxy {
                 httpHeaders = requestEntity.getHeaders();
             }
             responseEntity = restTemplate.exchange(url, method, requestEntity, responseType);
+            costTime = (int) (System.currentTimeMillis() - timestamp);
             // 请求响应解析
             resp = responseEntity.getBody();
             // 请求标识
@@ -162,7 +164,7 @@ public class RestTemplateProxy {
             info.setMethod(method.name());
             info.setReq(req);
             info.setTimestamp(timestamp);
-            info.setCostTime(System.currentTimeMillis() - timestamp);
+            info.setCostTime(costTime == -3 ? System.currentTimeMillis() - timestamp : costTime);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
             info.setSuccess(success);
