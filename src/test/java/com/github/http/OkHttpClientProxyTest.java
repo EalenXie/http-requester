@@ -24,27 +24,27 @@ public class OkHttpClientProxyTest {
 
 
         // 同步请求
-        String s;
-        try (Response response = okHttpClientProxy.newCallExecute(request)) {
-            s = response.body().string();
-            System.out.println("----------" + s);
-        }
+//        String s;
+//        try (Response response = okHttpClientProxy.newCallExecute(request)) {
+//            s = response.body().string();
+//            System.out.println("----------" + s);
+//        }
 
-//        // 异步请求
-//        okHttpClientProxy.newCallEnqueue(request, new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//                e.printStackTrace();
-//
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//                String s = response.body().string();
-//                System.out.println("----------" + s);
-//                response.close();
-//            }
-//        });
+        // 异步请求
+        okHttpClientProxy.newCallEnqueue(request, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String s = response.body().string();
+                System.out.println("----------" + s);
+                response.close();
+            }
+        });
 
 
     }

@@ -87,45 +87,45 @@ public class HttpClientProxy {
         HttpResponse response;
         long timestamp = System.currentTimeMillis();
         boolean success = false;
-        Object req = null;
+        Object body = null;
         Object resp = null;
-        String desc = null;
-        long costTime = -2L;
+        String remarks = null;
+        int costTime = -2;
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         try {
             response = httpClient.execute(host, request, context);
-            costTime = System.currentTimeMillis() - timestamp;
+            costTime = (int) (System.currentTimeMillis() - timestamp);
             if (request instanceof HttpEntityEnclosingRequestBase) {
-                req = EntityUtils.toString(((HttpEntityEnclosingRequestBase) request).getEntity());
+                body = EntityUtils.toString(((HttpEntityEnclosingRequestBase) request).getEntity());
             }
             success = true;
             if (response != null) {
                 rawStatusCode = response.getStatusLine().getStatusCode();
                 resp = getStringByHttpResponse(response);
             }
-            desc = String.format("%s Execute Success !", className);
+            remarks = String.format("%s Execute Success !", className);
         } catch (HttpResponseException e) {
             rawStatusCode = e.getStatusCode();
-            desc = String.format("%s Execute Fail. %s", className, e.getMessage());
+            remarks = String.format("%s Execute Fail. %s", className, e.getMessage());
             throw e;
         } catch (Exception e) {
-            desc = String.format("%s Execute Fail. %s", className, e.getMessage());
+            remarks = String.format("%s Execute Fail. %s", className, e.getMessage());
             throw e;
         } finally {
             ReqInfo info = new ReqInfo();
-            info.setCostTime(costTime == -2L ? (System.currentTimeMillis() - timestamp) : costTime);
+            info.setCostTime((int) (costTime == -2 ? (System.currentTimeMillis() - timestamp) : costTime));
             info.setAppName(getAppName());
             info.setHost(host.getHostName());
             info.setPort(host.getPort());
             info.setUrl(request.getRequestLine().getUri());
             info.setHttpHeaders(request.getAllHeaders() != null ? Arrays.toString(request.getAllHeaders()) : null);
             info.setMethod(request.getRequestLine().getMethod());
-            info.setReq(req);
+            info.setBody(body);
             info.setTimestamp(timestamp);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
             info.setSuccess(success);
-            info.setDesc(desc);
+            info.setRemarks(remarks);
             if (request instanceof HttpUriRequest) {
                 info.setUrlParam(((HttpUriRequest) request).getURI().getQuery());
             }

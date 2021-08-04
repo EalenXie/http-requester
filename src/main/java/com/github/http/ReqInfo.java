@@ -33,7 +33,7 @@ public class ReqInfo {
     /**
      * 请求参数
      */
-    private Object req;
+    private Object body;
     /**
      * 请求时间
      */
@@ -49,11 +49,11 @@ public class ReqInfo {
     /**
      * 耗时时间
      */
-    private long costTime;
+    private int costTime;
     /**
      * 备注
      */
-    private String desc;
+    private String remarks;
     /**
      * 请求状态 异常 false 正常 true
      */
@@ -111,12 +111,13 @@ public class ReqInfo {
         this.method = method;
     }
 
-    public Object getReq() {
-        return req;
+
+    public Object getBody() {
+        return body;
     }
 
-    public void setReq(Object req) {
-        this.req = req;
+    public void setBody(Object body) {
+        this.body = body;
     }
 
     public long getTimestamp() {
@@ -143,20 +144,20 @@ public class ReqInfo {
         this.statusCode = statusCode;
     }
 
-    public long getCostTime() {
+    public int getCostTime() {
         return costTime;
     }
 
-    public void setCostTime(long costTime) {
+    public void setCostTime(int costTime) {
         this.costTime = costTime;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getRemarks() {
+        return remarks;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 
     public boolean success() {
@@ -185,12 +186,12 @@ public class ReqInfo {
                 ", url='" + url + '\'' +
                 ", httpHeaders=" + httpHeaders +
                 ", method='" + method + '\'' +
-                ", req=" + req +
+                ", body=" + body +
                 ", timestamp=" + timestamp +
                 ", resp=" + resp +
                 ", statusCode=" + statusCode +
                 ", costTime=" + costTime +
-                ", desc='" + desc + '\'' +
+                ", remarks='" + remarks + '\'' +
                 ", success=" + success +
                 ", urlParam='" + urlParam + '\'' +
                 '}';

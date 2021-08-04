@@ -125,9 +125,9 @@ public class RestTemplateProxy {
         }
         ResponseEntity<T> responseEntity;
         boolean success = false;
-        Object req = null;
+        Object body = null;
         Object resp = null;
-        String desc = null;
+        String remarks = null;
         Object httpHeaders = null;
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         long timestamp = System.currentTimeMillis();
@@ -135,7 +135,7 @@ public class RestTemplateProxy {
         try {
             // 请求参数解析
             if (requestEntity != null) {
-                req = requestEntity.getBody();
+                body = requestEntity.getBody();
                 httpHeaders = requestEntity.getHeaders();
             }
             responseEntity = restTemplate.exchange(url, method, requestEntity, responseType);
@@ -145,14 +145,14 @@ public class RestTemplateProxy {
             // 请求标识
             success = true;
             rawStatusCode = responseEntity.getStatusCodeValue();
-            desc = String.format("%s Exchange Success !", className);
+            remarks = String.format("%s Exchange Success !", className);
         } catch (RestClientResponseException e) {
-            desc = String.format("%s Exchange Fail. %s", className, e.getMessage());
+            remarks = String.format("%s Exchange Fail. %s", className, e.getMessage());
             resp = e.getResponseBodyAsString();
             rawStatusCode = e.getRawStatusCode();
             throw e;
         } catch (Exception e) {
-            desc = String.format("%s Exchange Fail. %s", className, e.getMessage());
+            remarks = String.format("%s Exchange Fail. %s", className, e.getMessage());
             throw e;
         } finally {
             ReqInfo info = new ReqInfo();
@@ -162,14 +162,14 @@ public class RestTemplateProxy {
             info.setUrl(url.toString());
             info.setHttpHeaders(httpHeaders);
             info.setMethod(method.name());
-            info.setReq(req);
+            info.setBody(body);
             info.setTimestamp(timestamp);
-            info.setCostTime(costTime == -3 ? System.currentTimeMillis() - timestamp : costTime);
+            info.setCostTime(costTime == -3 ? (int) (System.currentTimeMillis() - timestamp) : costTime);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
             info.setSuccess(success);
             info.setUrlParam(url.getQuery());
-            info.setDesc(desc);
+            info.setRemarks(remarks);
             collector.collect(info);
         }
         return responseEntity;

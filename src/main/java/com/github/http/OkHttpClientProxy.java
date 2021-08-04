@@ -10,6 +10,8 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by EalenXie on 2021/7/15 11:16
@@ -22,6 +24,8 @@ public class OkHttpClientProxy {
     private final OkHttpClient okHttpClient;
 
     private final String className = this.getClass().getName();
+
+    private final Map<Callback, CallbackProxy> callbackProxyMap = new HashMap<>();
 
     private String appName;
 
@@ -38,19 +42,33 @@ public class OkHttpClientProxy {
         this.okHttpClient = okHttpClient;
     }
 
+    public CallbackProxy getCallbackProxy(Callback callback) {
+        CallbackProxy callbackProxy = callbackProxyMap.get(callback);
+        if (callbackProxy == null) {
+            synchronized (this) {
+                callbackProxy = new CallbackProxy(collector, callback);
+                callbackProxyMap.put(callback, callbackProxy);
+                if (callbackProxyMap.size() > 100) {
+                    callbackProxyMap.clear();
+                }
+            }
+        }
+        callbackProxy.setTimestamp(System.currentTimeMillis());
+        return callbackProxy;
+    }
 
     public Response callExecute(Call call) throws IOException {
         Request request = call.request();
         Response response;
         long timestamp = System.currentTimeMillis();
         boolean success = false;
-        Object req = null;
+        Object body = null;
         Object resp = null;
-        String desc = null;
-        long costTime = -1L;
+        String remarks = null;
+        int costTime = -1;
         int rawStatusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         try {
-            req = getRequest(request.body());
+            body = getRequest(request.body());
             response = call.execute();
             rawStatusCode = response.code();
             resp = getResponse(response);
@@ -58,28 +76,28 @@ public class OkHttpClientProxy {
                 success = true;
             }
             timestamp = response.sentRequestAtMillis();
-            costTime = response.receivedResponseAtMillis() - timestamp;
-            desc = String.format("%s Call.Execute Success !", className);
+            costTime = (int) (response.receivedResponseAtMillis() - timestamp);
+            remarks = String.format("%s Call.Execute Success !", className);
         } catch (Exception e) {
-            desc = String.format("%s Call.Execute Fail. %s", className, e.getMessage());
+            remarks = String.format("%s Call.Execute Fail. %s", className, e.getMessage());
             throw e;
         } finally {
             ReqInfo info = getReqInfoByRequest(request);
-            info.setReq(req);
+            info.setBody(body);
             info.setTimestamp(timestamp);
             info.setResp(resp);
             info.setStatusCode(rawStatusCode);
-            info.setCostTime(costTime == -1L ? System.currentTimeMillis() - timestamp : costTime);
+            info.setCostTime((int) (costTime == -1 ? System.currentTimeMillis() - timestamp : costTime));
             info.setSuccess(success);
             info.setUrlParam(request.url().query());
-            info.setDesc(desc);
+            info.setRemarks(remarks);
             collector.collect(info);
         }
         return response;
     }
 
     public void callEnqueue(Call call, Callback responseCallback) {
-        call.enqueue(new CallbackProxy(collector, responseCallback));
+        call.enqueue(getCallbackProxy(responseCallback));
     }
 
     public Response newCallExecute(Request request) throws IOException {
@@ -111,10 +129,15 @@ public class OkHttpClientProxy {
 
         private final ReqInfoCollector collector;
         private final Callback callback;
+        private long timestamp;
 
         public CallbackProxy(ReqInfoCollector collector, Callback callback) {
             this.collector = collector;
             this.callback = callback;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
         }
 
         @Override
@@ -122,14 +145,14 @@ public class OkHttpClientProxy {
             Request request = call.request();
             ReqInfo info = getReqInfoByRequest(request);
             try {
-                info.setReq(getRequest(request.body()));
-                info.setTimestamp(System.currentTimeMillis());
+                info.setBody(getRequest(request.body()));
+                info.setTimestamp(timestamp);
                 info.setResp(null);
                 info.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-                info.setCostTime(System.currentTimeMillis());
+                info.setCostTime((int) (System.currentTimeMillis() - timestamp));
                 info.setSuccess(false);
                 info.setUrlParam(request.url().query());
-                info.setDesc(String.format("%s Call.Enqueue Fail. %s", className, e.getMessage()));
+                info.setRemarks(String.format("%s Call.Enqueue Fail. %s", className, e.getMessage()));
             } catch (Exception c) {
                 // ig
             } finally {
@@ -143,14 +166,14 @@ public class OkHttpClientProxy {
             Request request = call.request();
             ReqInfo info = getReqInfoByRequest(request);
             try {
-                info.setReq(getRequest(request.body()));
+                info.setBody(getRequest(request.body()));
                 info.setTimestamp(response.sentRequestAtMillis());
                 info.setResp(getResponse(response));
                 info.setStatusCode(response.code());
-                info.setCostTime(response.receivedResponseAtMillis() - info.getTimestamp());
+                info.setCostTime((int) (response.receivedResponseAtMillis() - info.getTimestamp()));
                 info.setSuccess(response.isSuccessful());
                 info.setUrlParam(request.url().query());
-                info.setDesc(String.format("%s Call.Enqueue Success !", className));
+                info.setRemarks(String.format("%s Call.Enqueue Success !", className));
                 collector.collect(info);
             } catch (Exception e) {
                 // ig
