@@ -59,7 +59,7 @@ public class CustomReqInfoCollector implements ReqInfoCollector {
 	 // 自己创建的RestTemplate
 	 RestTemplate restTemplate = new RestTemplate();
 	 // 入参为自己创建的RestTemplate对象, 以及请求信息收集的收集器实现
-     RestTemplateProxy restTemplateProxy = new RestTemplateProxy(restTemplate, collector);
+	 RestTemplateProxy restTemplateProxy = new RestTemplateProxy(restTemplate, collector);
 ```
 
 ##### 3. 调用`Proxy`对象发起请求,例如`RestTemplateProxy`
