@@ -1,19 +1,25 @@
 package com.github.http;
 
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.*;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriTemplateHandler;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by EalenXie on 2021/7/14 15:32
+ *
+ * TODO
  */
-public class RestTemplateProxy {
+public class RestTemplateProxy implements RestOperations {
     private final RestTemplate restTemplate;
     private final UriTemplateHandler uriTemplateHandler = initUriTemplateHandler();
     private final String className = this.getClass().getName();
@@ -47,36 +53,124 @@ public class RestTemplateProxy {
         this.collector = collector;
     }
 
+    @Override
     public <T> T getForObject(String url, Class<T> responseType, Map<String, ?> uriVariables) {
         return getForEntity(url, responseType, uriVariables).getBody();
     }
 
+    @Override
+    public <T> T getForObject(URI url, Class<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
     public <T> T getForObject(String url, Class<T> responseType, Object... uriVariables) {
         return getForEntity(url, responseType, uriVariables).getBody();
     }
 
+    @Override
     public <T> ResponseEntity<T> getForEntity(String url, Class<T> responseType, Map<String, ?> uriVariables) {
         return exchange(url, HttpMethod.GET, null, responseType, uriVariables);
     }
 
+    @Override
+    public <T> ResponseEntity<T> getForEntity(URI url, Class<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public HttpHeaders headForHeaders(String url, Object... uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public HttpHeaders headForHeaders(String url, Map<String, ?> uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public HttpHeaders headForHeaders(URI url) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public URI postForLocation(String url, Object request, Object... uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public URI postForLocation(String url, Object request, Map<String, ?> uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public URI postForLocation(URI url, Object request) throws RestClientException {
+        return null;
+    }
+
+    @Override
     public <T> ResponseEntity<T> getForEntity(String url, Class<T> responseType, Object... uriVariables) {
         return exchange(url, HttpMethod.GET, null, responseType, uriVariables);
     }
 
+    @Override
     public <T> T postForObject(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) {
         return postForEntity(url, request, responseType, uriVariables).getBody();
     }
 
+    @Override
+    public <T> T postForObject(URI url, Object request, Class<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
     public <T> T postForObject(String url, Object request, Class<T> responseType, Object... uriVariables) {
         return postForEntity(url, request, responseType, uriVariables).getBody();
     }
 
+    @Override
     public <T> ResponseEntity<T> postForEntity(String url, Object request, Class<T> responseType, Object... uriVariables) {
         return exchange(url, HttpMethod.POST, httpEntity(request), responseType, uriVariables);
     }
 
+    @Override
     public <T> ResponseEntity<T> postForEntity(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) {
         return exchange(url, HttpMethod.POST, httpEntity(request), responseType, uriVariables);
+    }
+
+    @Override
+    public <T> ResponseEntity<T> postForEntity(URI url, Object request, Class<T> responseType) throws RestClientException {
+        return exchange(url, HttpMethod.POST, httpEntity(request), responseType);
+    }
+
+    @Override
+    public void put(String url, Object request, Object... uriVariables) throws RestClientException {
+
+    }
+
+    @Override
+    public void put(String url, Object request, Map<String, ?> uriVariables) throws RestClientException {
+
+    }
+
+    @Override
+    public void put(URI url, Object request) throws RestClientException {
+
+    }
+
+    @Override
+    public <T> T patchForObject(String url, Object request, Class<T> responseType, Object... uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> T patchForObject(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> T patchForObject(URI url, Object request, Class<T> responseType) throws RestClientException {
+        return null;
     }
 
     public <T> T putForObject(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) {
@@ -103,6 +197,11 @@ public class RestTemplateProxy {
         return exchange(uriTemplateHandler.expand(url, uriVariables), method, requestEntity, responseType);
     }
 
+    @Override
+    public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, Map<String, ?> uriVariables) throws RestClientException {
+        return exchange(uriTemplateHandler.expand(url, uriVariables), method, requestEntity, responseType, collector);
+    }
+
     public void delete(String url, Object... uriVariables) {
         exchange(uriTemplateHandler.expand(url, uriVariables), HttpMethod.DELETE, null, Void.class);
     }
@@ -115,8 +214,88 @@ public class RestTemplateProxy {
         exchange(url, HttpMethod.DELETE, null, Void.class);
     }
 
+    @Override
+    public Set<HttpMethod> optionsForAllow(String url, Object... uriVariables) throws RestClientException {
+        return restTemplate.optionsForAllow(url, uriVariables);
+    }
+
+    @Override
+    public Set<HttpMethod> optionsForAllow(String url, Map<String, ?> uriVariables) throws RestClientException {
+        return restTemplate.optionsForAllow(url, uriVariables);
+    }
+
+    @Override
+    public Set<HttpMethod> optionsForAllow(URI url) throws RestClientException {
+        return restTemplate.optionsForAllow(url);
+    }
+
+    @Override
     public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType) {
         return exchange(url, method, requestEntity, responseType, collector);
+    }
+
+    @Override
+    public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType, Object... uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType, Map<String, ?> uriVariables) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> ResponseEntity<T> exchange(RequestEntity<?> requestEntity, Class<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> ResponseEntity<T> exchange(RequestEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
+        return null;
+    }
+
+    @Override
+    public <T> T execute(String url, HttpMethod method, RequestCallback requestCallback, ResponseExtractor<T> responseExtractor, Object... uriVariables) throws RestClientException {
+        return execute(uriTemplateHandler.expand(url, uriVariables), method, requestCallback, responseExtractor);
+    }
+
+    @Override
+    public <T> T execute(String url, HttpMethod method, RequestCallback requestCallback, ResponseExtractor<T> responseExtractor, Map<String, ?> uriVariables) throws RestClientException {
+        return execute(uriTemplateHandler.expand(url, uriVariables), method, requestCallback, responseExtractor);
+    }
+
+    @Override
+    public <T> T execute(URI url, HttpMethod method, RequestCallback requestCallback, ResponseExtractor<T> responseExtractor) throws RestClientException {
+        ClientHttpResponse response = null;
+        try {
+            ClientHttpRequest request = restTemplate.getRequestFactory().createRequest(url, method);
+            restTemplate.getClientHttpRequestInitializers().forEach(initializer -> initializer.initialize(request));
+            if (requestCallback != null) {
+                requestCallback.doWithRequest(request);
+            }
+            response = request.execute();
+            ResponseErrorHandler errorHandler = restTemplate.getErrorHandler();
+            boolean hasError = errorHandler.hasError(response);
+            if (hasError) {
+                errorHandler.handleError(url, method, response);
+            }
+            return (responseExtractor != null ? responseExtractor.extractData(response) : null);
+        } catch (IOException ex) {
+            String resource = url.toString();
+            String query = url.getRawQuery();
+            resource = (query != null ? resource.substring(0, resource.indexOf('?')) : resource);
+            throw new ResourceAccessException("I/O error on " + method.name() +
+                    " request for \"" + resource + "\": " + ex.getMessage(), ex);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, ReqInfoCollector collector) {
