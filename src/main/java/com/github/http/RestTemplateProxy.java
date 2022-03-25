@@ -16,8 +16,7 @@ import java.util.Set;
 
 /**
  * Created by EalenXie on 2021/7/14 15:32
- *
- * TODO
+ * <p>
  */
 public class RestTemplateProxy implements RestOperations {
     private final RestTemplate restTemplate;
@@ -60,7 +59,7 @@ public class RestTemplateProxy implements RestOperations {
 
     @Override
     public <T> T getForObject(URI url, Class<T> responseType) throws RestClientException {
-        return null;
+        return getForEntity(url, responseType).getBody();
     }
 
     @Override
@@ -75,37 +74,37 @@ public class RestTemplateProxy implements RestOperations {
 
     @Override
     public <T> ResponseEntity<T> getForEntity(URI url, Class<T> responseType) throws RestClientException {
-        return null;
+        return exchange(url, HttpMethod.GET, null, responseType);
     }
 
     @Override
     public HttpHeaders headForHeaders(String url, Object... uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.headForHeaders(url, uriVariables);
     }
 
     @Override
     public HttpHeaders headForHeaders(String url, Map<String, ?> uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.headForHeaders(url, uriVariables);
     }
 
     @Override
     public HttpHeaders headForHeaders(URI url) throws RestClientException {
-        return null;
+        return restTemplate.headForHeaders(url);
     }
 
     @Override
     public URI postForLocation(String url, Object request, Object... uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.postForLocation(url, request, uriVariables);
     }
 
     @Override
     public URI postForLocation(String url, Object request, Map<String, ?> uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.postForLocation(url, request, uriVariables);
     }
 
     @Override
     public URI postForLocation(URI url, Object request) throws RestClientException {
-        return null;
+        return restTemplate.postForLocation(url, request);
     }
 
     @Override
@@ -120,7 +119,7 @@ public class RestTemplateProxy implements RestOperations {
 
     @Override
     public <T> T postForObject(URI url, Object request, Class<T> responseType) throws RestClientException {
-        return null;
+        return postForEntity(url, request, responseType).getBody();
     }
 
     @Override
@@ -145,32 +144,32 @@ public class RestTemplateProxy implements RestOperations {
 
     @Override
     public void put(String url, Object request, Object... uriVariables) throws RestClientException {
-
+        putForEntity(url, request, Void.class, uriVariables);
     }
 
     @Override
     public void put(String url, Object request, Map<String, ?> uriVariables) throws RestClientException {
-
+        putForEntity(url, request, Void.class, uriVariables);
     }
 
     @Override
     public void put(URI url, Object request) throws RestClientException {
-
+        restTemplate.put(url, request);
     }
 
     @Override
     public <T> T patchForObject(String url, Object request, Class<T> responseType, Object... uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.patchForObject(url, request, responseType, uriVariables);
     }
 
     @Override
     public <T> T patchForObject(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) throws RestClientException {
-        return null;
+        return restTemplate.patchForObject(url, request, responseType, uriVariables);
     }
 
     @Override
     public <T> T patchForObject(URI url, Object request, Class<T> responseType) throws RestClientException {
-        return null;
+        return restTemplate.patchForObject(url, request, responseType);
     }
 
     public <T> T putForObject(String url, Object request, Class<T> responseType, Map<String, ?> uriVariables) {
@@ -236,27 +235,28 @@ public class RestTemplateProxy implements RestOperations {
 
     @Override
     public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType, Object... uriVariables) throws RestClientException {
-        return null;
+        return exchange(uriTemplateHandler.expand(url, uriVariables), method, requestEntity, responseType);
     }
 
     @Override
     public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType, Map<String, ?> uriVariables) throws RestClientException {
-        return null;
+        return exchange(uriTemplateHandler.expand(url, uriVariables), method, requestEntity, responseType);
     }
 
     @Override
-    public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
-        return null;
+    public <T> ResponseEntity<T> exchange(URI uri, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
+        @SuppressWarnings({"rawtypes", "unchecked"}) Class<T> type = (Class) responseType.getType();
+        return exchange(uri, method, requestEntity, type);
     }
 
     @Override
     public <T> ResponseEntity<T> exchange(RequestEntity<?> requestEntity, Class<T> responseType) throws RestClientException {
-        return null;
+        return restTemplate.exchange(requestEntity, responseType);
     }
 
     @Override
     public <T> ResponseEntity<T> exchange(RequestEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
-        return null;
+        return restTemplate.exchange(requestEntity, responseType);
     }
 
     @Override
@@ -289,8 +289,7 @@ public class RestTemplateProxy implements RestOperations {
             String resource = url.toString();
             String query = url.getRawQuery();
             resource = (query != null ? resource.substring(0, resource.indexOf('?')) : resource);
-            throw new ResourceAccessException("I/O error on " + method.name() +
-                    " request for \"" + resource + "\": " + ex.getMessage(), ex);
+            throw new ResourceAccessException("I/O error on " + method.name() + " request for \"" + resource + "\": " + ex.getMessage(), ex);
         } finally {
             if (response != null) {
                 response.close();
@@ -353,7 +352,6 @@ public class RestTemplateProxy implements RestOperations {
         }
         return responseEntity;
     }
-
 
     @SuppressWarnings(value = "unchecked")
     public <T> HttpEntity<T> httpEntity(T requestBody) {
