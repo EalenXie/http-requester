@@ -244,9 +244,8 @@ public class RestTemplateProxy implements RestOperations {
     }
 
     @Override
-    public <T> ResponseEntity<T> exchange(URI uri, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> responseType) throws RestClientException {
-        @SuppressWarnings({"rawtypes", "unchecked"}) Class<T> type = (Class) responseType.getType();
-        return exchange(uri, method, requestEntity, type);
+    public <T> ResponseEntity<T> exchange(URI uri, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> typeReference) throws RestClientException {
+        return exchange(uri, method, requestEntity, typeReference, collector);
     }
 
     @Override
@@ -297,10 +296,18 @@ public class RestTemplateProxy implements RestOperations {
         }
     }
 
+
+    public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, ParameterizedTypeReference<T> typeReference, ReqInfoCollector collector) {
+        if (collector == null) return restTemplate.exchange(url, method, requestEntity, typeReference);
+        return exchangeCollector(url, method, requestEntity, collector, typeReference, null);
+    }
+
     public <T> ResponseEntity<T> exchange(URI url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, ReqInfoCollector collector) {
-        if (collector == null) {
-            return restTemplate.exchange(url, method, requestEntity, responseType);
-        }
+        if (collector == null) return restTemplate.exchange(url, method, requestEntity, responseType);
+        return exchangeCollector(url, method, requestEntity, collector, null, responseType);
+    }
+
+    private <T> ResponseEntity<T> exchangeCollector(URI url, HttpMethod method, HttpEntity<?> requestEntity, ReqInfoCollector collector, ParameterizedTypeReference<T> typeReference, Class<T> responseType) {
         ResponseEntity<T> responseEntity;
         boolean success = false;
         Object body = null;
@@ -316,7 +323,11 @@ public class RestTemplateProxy implements RestOperations {
                 body = requestEntity.getBody();
                 httpHeaders = requestEntity.getHeaders();
             }
-            responseEntity = restTemplate.exchange(url, method, requestEntity, responseType);
+            if (typeReference != null) {
+                responseEntity = restTemplate.exchange(url, method, requestEntity, typeReference);
+            } else {
+                responseEntity = restTemplate.exchange(url, method, requestEntity, responseType);
+            }
             costTime = (int) (System.currentTimeMillis() - timestamp);
             // 请求响应解析
             resp = responseEntity.getBody();
@@ -353,7 +364,6 @@ public class RestTemplateProxy implements RestOperations {
         return responseEntity;
     }
 
-    @SuppressWarnings(value = "unchecked")
     public <T> HttpEntity<T> httpEntity(T requestBody) {
         if (requestBody instanceof HttpEntity) {
             return (HttpEntity<T>) requestBody;
